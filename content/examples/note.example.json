@@ -1,0 +1,9 @@
+{
+  "title": "Example note from the bot",
+  "slug": "example-note-from-the-bot",
+  "summary": "Copy this file, change the fields, then run npm run notes:add.",
+  "body": "## What shipped\n\nDescribe the app or change here. Markdown is fine.\n\n- Link the repo if there is one\n- Call out the stack\n- Note anything you would forget next week\n",
+  "tags": ["cursor-ultra", "example"],
+  "created_at": "2026-09-18",
+  "project_url": "https://github.com/sanikantv/cursor-ultra-notes"
+}
