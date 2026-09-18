@@ -1,157 +1,65 @@
-# Cursor Ultra Build Notes
+# Ultra Notes
 
-A personal notes / log site for apps and projects [Sani Verma](https://github.com/sanikantv) (`@sanikantv`) built with Cursor after buying **Cursor Ultra on 18 September 2026**.
+Private notes for apps and projects [Sani Verma](https://github.com/sanikantv) (`@sanikantv`) built with Cursor after buying **Cursor Ultra on 18 September 2026**.
 
-The homepage lists notes newest first (title, date, summary, tags). Each note has a detail page with a markdown body. You can search by text or filter by tag.
+The site is a **Cloudflare Pages** app at **[https://ultra-notes.pages.dev](https://ultra-notes.pages.dev)**. Every page and API route requires a login. Notes are stored in Cloudflare D1 (SQLite).
 
-**Repo:** [github.com/sanikantv/cursor-ultra-notes](https://github.com/sanikantv/cursor-ultra-notes)
+Repo: [github.com/sanikantv/cursor-ultra-notes](https://github.com/sanikantv/cursor-ultra-notes)
 
 ## Stack
 
-- **Cloudflare Workers** with static assets (current Workers / Pages deploy path)
-- **Cloudflare D1** (SQLite) in production; the same schema locally via `wrangler d1` / local SQLite
-- **Hono** + TypeScript
-- **Tailwind CSS**
-- Markdown bodies rendered with `marked`
-
-No secrets are required to run or deploy this repo. Cloudflare login is only needed for remote D1 and `wrangler deploy`.
+- Cloudflare Pages (project name `ultra-notes` → `ultra-notes.pages.dev`)
+- Pages Functions via Hono
+- Cloudflare D1
+- Owner-only login (PBKDF2 password hash, hashed server-side sessions, login lockout)
+- Tailwind CSS
+- Markdown notes from `content/notes/`
 
 ## Local run
 
 ```bash
 npm install
+cp .dev.vars.example .dev.vars
 npm run db:setup
 npm run dev
 ```
 
-Then open [http://localhost:8787](http://localhost:8787).
+Open [http://localhost:8787](http://localhost:8787). You should land on the sign-in page.
 
-What those commands do:
+Local login (from `.dev.vars.example` only — not for production):
 
-| Command | What it does |
+| Field | Value |
 | --- | --- |
-| `npm install` | Installs dependencies (creates `package-lock.json` on first run) |
-| `npm run db:setup` | Applies D1 migrations to the **local** SQLite DB, then upserts every file in `content/notes/` |
-| `npm run dev` | Builds CSS and starts `wrangler dev` on port 8787 |
+| Email | `sani@localhost` |
+| Password | `local-dev-only` |
 
-Useful extras:
+## Production deploy (Cloudflare Pages)
 
-```bash
-npm run db:migrate          # local migrations only
-npm run notes:sync          # re-read content/notes into local D1
-npm run typecheck
-```
-
-If the homepage says the database is empty, you skipped `npm run db:setup`.
-
-## Adding notes (for Grok Bot / automation)
-
-There is no CMS and no secret-gated write API in the repo. A bot adds notes by **committing a file** and/or **running a small CLI** that upserts into D1 by `slug`.
-
-### Option A — commit a markdown or JSON file (preferred)
-
-1. Create `content/notes/<slug>.md` (or `.json`).
-2. Use the frontmatter / JSON shape below.
-3. Sync into the database:
-
-```bash
-# local D1 (development)
-npm run notes:sync
-
-# production D1 (after wrangler login)
-npm run notes:sync -- --remote
-```
-
-Markdown example (`content/notes/my-new-app.md`):
-
-```markdown
----
-title: My new app
-slug: my-new-app
-summary: One or two sentences for the homepage card.
-tags: [cursor-ultra, workers]
-created_at: 2026-09-18
-project_url: https://github.com/sanikantv/my-new-app
----
-
-The markdown body. GitHub-flavored markdown is fine.
-```
-
-JSON example — see [`content/examples/note.example.json`](content/examples/note.example.json).
-
-Seed notes already in the repo:
-
-- [`content/notes/starting-cursor-ultra.md`](content/notes/starting-cursor-ultra.md)
-- [`content/notes/cursor-ultra-build-notes.md`](content/notes/cursor-ultra-build-notes.md)
-
-### Option B — CLI insert from a single file or stdin
-
-```bash
-# from a file
-npm run notes:add -- content/notes/my-new-app.md
-npm run notes:add -- path/to/note.json
-
-# from stdin (good for a bot that already has JSON)
-cat path/to/note.json | npm run notes:add -- --stdin
-
-# production D1
-npm run notes:add -- --remote content/notes/my-new-app.md
-```
-
-Exact JSON fields:
-
-| Field | Required | Notes |
-| --- | --- | --- |
-| `title` | yes | Homepage + detail heading |
-| `body` | yes | Markdown |
-| `slug` | no | Auto-generated from title if omitted; unique key |
-| `summary` | no | Short card text |
-| `tags` | no | Array of strings, stored as JSON in D1 |
-| `created_at` | no | `YYYY-MM-DD` (defaults to today) |
-| `updated_at` | no | Defaults to `created_at` |
-| `project_url` | no | Optional repo or live URL |
-
-Re-running the CLI or sync **updates** an existing row with the same `slug`.
-
-### Verify
-
-```bash
-# after npm run dev
-curl -s http://localhost:8787/api/notes | head
-curl -s http://localhost:8787/api/notes/starting-cursor-ultra
-```
-
-## Database schema
-
-Canonical SQL: [`schema.sql`](schema.sql)  
-Wrangler migration: [`migrations/0001_create_notes.sql`](migrations/0001_create_notes.sql)
-
-```sql
-CREATE TABLE notes (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  title TEXT NOT NULL,
-  slug TEXT NOT NULL UNIQUE,
-  summary TEXT NOT NULL DEFAULT '',
-  body TEXT NOT NULL,              -- markdown
-  tags TEXT NOT NULL DEFAULT '[]', -- JSON array of strings
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL,
-  project_url TEXT
-);
-```
-
-## Deploy (Cloudflare Workers / Pages)
-
-The project is deploy-ready. Cloudflare login cannot live in this repo — run this once on a machine that can open a browser:
+One-time on a machine that can open a browser:
 
 ```bash
 npx wrangler login
 ```
 
-Create the remote D1 database and paste its id into `wrangler.toml` (replace the local placeholder `00000000-0000-4000-8000-000000000001`):
+Create the D1 database and paste the returned `database_id` into `wrangler.jsonc` (replace the local placeholder):
 
 ```bash
 npx wrangler d1 create cursor-ultra-notes
+```
+
+Hash a strong password and a session secret:
+
+```bash
+npm run auth:hash -- 'your-strong-password'
+openssl rand -hex 32
+```
+
+Set Pages secrets (these never go in git):
+
+```bash
+printf '%s' 'you@your-email.com' | npx wrangler pages secret put AUTH_EMAIL --project-name=ultra-notes
+printf '%s' 'pbkdf2$sha256$...' | npx wrangler pages secret put AUTH_PASSWORD_HASH --project-name=ultra-notes
+printf '%s' 'hex-from-openssl' | npx wrangler pages secret put SESSION_SECRET --project-name=ultra-notes
 ```
 
 Then:
@@ -162,33 +70,66 @@ npm run notes:sync -- --remote
 npm run deploy
 ```
 
-`npm run deploy` and `npm run pages:deploy` both run `wrangler deploy` (Workers with static assets — the current Cloudflare Pages / Workers path). After login that is the one command that publishes the site.
+`npm run deploy` publishes to the **ultra-notes** Pages project. Production URL:
 
-Dashboard alternative: **Workers & Pages → Create → connect this GitHub repo**.
+**https://ultra-notes.pages.dev**
 
-- Build command: `npm run css`
-- Deploy command: `npx wrangler deploy`
+GitHub Actions (`.github/workflows/deploy-pages.yml`) deploys on push to `main` once these repository secrets exist:
 
-No API tokens or other secrets are required in the repository.
+- `CLOUDFLARE_API_TOKEN` (Account → API tokens, edit Cloudflare Pages + D1)
+- `CLOUDFLARE_ACCOUNT_ID`
 
-## Project layout
+Optional custom domain in the Pages dashboard: **Custom domains → `ultra-notes.your-domain.com`**.
 
+Optional extra lock: Cloudflare Zero Trust **Access** on `ultra-notes.pages.dev` (and any custom domain) so even the login page sits behind Cloudflare’s identity gate.
+
+## Security model
+
+- Fail closed: missing auth secrets never expose notes
+- HttpOnly + SameSite=Strict session cookie (`__Host-` prefix on HTTPS)
+- Session token is random; D1 stores only `SHA-256(token)`
+- PBKDF2-SHA-256 password hashes (100,000 iterations)
+- Same-origin check on login/logout POST
+- 5 failed logins / 15 minutes / IP (IP is HMAC’d, not stored raw)
+- Security headers: CSP with `script-src 'none'`, HSTS on HTTPS, `X-Frame-Options: DENY`, `no-store`, `X-Robots-Tag: noindex`
+- No third-party fonts or scripts
+- `/api/*` returns 401 without a valid session
+- `robots.txt` disallows all crawlers
+
+## Adding notes (Grok Bot / automation)
+
+Commit a file under `content/notes/` and sync D1:
+
+```bash
+npm run notes:sync
+npm run notes:sync -- --remote
 ```
-content/notes/          # source files a bot can commit
-content/examples/       # JSON + markdown templates
-migrations/             # wrangler D1 migrations
-schema.sql              # readable schema copy
-scripts/add-note.ts     # CLI upsert from one file or stdin
-scripts/sync-notes.ts   # upsert every file in content/notes
-src/index.tsx           # Hono app: list, detail, search, JSON API
-wrangler.toml           # D1 binding + assets + observability
+
+Or upsert one file:
+
+```bash
+npm run notes:add -- content/notes/my-new-app.md
 ```
+
+See [`content/examples/`](content/examples/) for the markdown / JSON shape.
 
 ## Routes
 
 | Path | Purpose |
 | --- | --- |
-| `/` | Note list, newest first. `?q=` text search, `?tag=` tag filter |
-| `/notes/:slug` | Note detail (rendered markdown) |
-| `/api/notes` | JSON list (same filters) |
-| `/api/notes/:slug` | JSON detail |
+| `/login` | Owner sign-in |
+| `/logout` | POST only, clears session |
+| `/` | Note list (auth required). `?q=` search, `?tag=` filter |
+| `/notes/:slug` | Note detail (auth required) |
+| `/api/notes` | JSON list (auth required) |
+| `/api/notes/:slug` | JSON detail (auth required) |
+
+## Project layout
+
+```
+content/notes/          # source files a bot can commit
+functions/[[path]].ts   # Cloudflare Pages catch-all → Hono
+migrations/             # wrangler D1 migrations (notes + auth)
+src/index.tsx           # Hono app: auth, list, detail, JSON API
+wrangler.jsonc          # Pages project ultra-notes + D1 binding
+```

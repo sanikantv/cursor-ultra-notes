@@ -1,0 +1,24 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "ultra-notes",
+  "pages_build_output_dir": "./public",
+  "compatibility_date": "2026-09-18",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cursor-ultra-notes",
+      "database_id": "00000000-0000-4000-8000-000000000001",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    "SITE_TITLE": "Ultra Notes",
+    "SITE_OWNER": "Sani Verma",
+    "SITE_OWNER_GITHUB": "sanikantv"
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  }
+}

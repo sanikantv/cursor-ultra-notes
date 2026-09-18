@@ -1,0 +1,18 @@
+# Copy to .dev.vars for local `npm run dev`.
+# Never commit real production secrets.
+#
+# Local login:
+#   email: sani@localhost
+#   password: local-dev-only
+#
+# Production (Cloudflare Pages secrets):
+#   npx wrangler pages secret put AUTH_EMAIL --project-name=ultra-notes
+#   npx wrangler pages secret put AUTH_PASSWORD_HASH --project-name=ultra-notes
+#   npx wrangler pages secret put SESSION_SECRET --project-name=ultra-notes
+#
+# Hash a password with: npm run auth:hash -- 'your-strong-password'
+# Generate a session secret with: openssl rand -hex 32
+
+AUTH_EMAIL=sani@localhost
+AUTH_PASSWORD_HASH=pbkdf2$sha256$100000$lxTX1JA4gTioGqty0BRihg$V_gRf4tHYBgKotwAv100qz5Hd2uX1zbYlIBok2xAnmM
+SESSION_SECRET=local-dev-only-replace-with-openssl-rand-hex-32-before-any-real-use
