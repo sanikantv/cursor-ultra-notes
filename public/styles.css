@@ -3,7 +3,7 @@
 @layer theme, base, components, utilities;
 @layer theme {
   :root, :host {
-    --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+    --font-sans: ui-sans-serif, system-ui, "Segoe UI", sans-serif;
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
       "Courier New", monospace;
     --spacing: 0.25rem;
@@ -34,7 +34,7 @@
     --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     --default-font-family: var(--font-sans);
     --default-mono-font-family: var(--font-mono);
-    --font-display: "Instrument Serif", "Times New Roman", serif;
+    --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
     --color-paper: #12110e;
     --color-panel: #1b1914;
     --color-ink: #f4efe4;
@@ -673,6 +673,12 @@
   .mb-10 {
     margin-bottom: calc(var(--spacing) * 10);
   }
+  .block {
+    display: block;
+  }
+  .contents {
+    display: contents;
+  }
   .flex {
     display: flex;
   }
@@ -779,6 +785,12 @@
   .border-amber {
     border-color: var(--color-amber);
   }
+  .border-amber\/30 {
+    border-color: color-mix(in srgb, #e8b86d 30%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in oklab, var(--color-amber) 30%, transparent);
+    }
+  }
   .border-amber\/40 {
     border-color: color-mix(in srgb, #e8b86d 40%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -790,6 +802,12 @@
   }
   .bg-amber {
     background-color: var(--color-amber);
+  }
+  .bg-amber\/10 {
+    background-color: color-mix(in srgb, #e8b86d 10%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-amber) 10%, transparent);
+    }
   }
   .bg-amber\/15 {
     background-color: color-mix(in srgb, #e8b86d 15%, transparent);
@@ -1036,6 +1054,9 @@
     }
     .sm\:p-6 {
       padding: calc(var(--spacing) * 6);
+    }
+    .sm\:p-8 {
+      padding: calc(var(--spacing) * 8);
     }
     .sm\:px-8 {
       padding-inline: calc(var(--spacing) * 8);

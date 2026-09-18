@@ -15,5 +15,5 @@
     "verbatimModuleSyntax": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*", "scripts/**/*", "worker-configuration.d.ts"]
+  "include": ["src/**/*", "scripts/**/*", "functions/**/*", "worker-configuration.d.ts"]
 }
