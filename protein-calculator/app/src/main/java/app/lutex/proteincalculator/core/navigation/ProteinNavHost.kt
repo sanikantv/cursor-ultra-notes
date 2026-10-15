@@ -52,6 +52,9 @@ fun ProteinNavHost(
     val colors = emeraldColors()
     val backStack by navController.currentBackStackEntryAsState()
     val route = backStack?.destination?.route
+    // Preferences load before this host is shown. Keep that first route: completing
+    // onboarding navigates forward instead of rebuilding the graph.
+    val startDestination = remember { Routes.startDestination(onboardingComplete) }
     val showBottomBar = route == Routes.CALCULATOR || route == Routes.SETTINGS
     Scaffold(
         modifier = modifier,
@@ -96,7 +99,7 @@ fun ProteinNavHost(
     ) { padding ->
         NavHost(
             navController = navController,
-            startDestination = Routes.startDestination(onboardingComplete),
+            startDestination = startDestination,
             modifier = Modifier.padding(padding),
         ) {
             composable(Routes.ONBOARDING) {
